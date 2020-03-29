@@ -1,4 +1,6 @@
 // Java program for implementation of Ford Fulkerson algorithm
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.lang.*;
 import java.util.LinkedList;
@@ -9,6 +11,9 @@ class MaxFlow
     static int snodes;
     static int sink;
     static int source;
+    static int edges;
+    static long start; //starting time
+    static ArrayList<String> flow = new ArrayList<String>();
     /* Returns true if there is a path from source 's' to sink
     't' in residual graph. Also fills parent[] to store the
     path */
@@ -51,9 +56,6 @@ class MaxFlow
     int fordFulkerson(int graph[][],int nodes)
     {
         int u, v;
-        int s =0;
-        int t = nodes-1;
-
         // Create a residual graph and fill the residual graph
         // with given capacities in the original graph as
         // residual capacities in residual graph
@@ -73,15 +75,13 @@ class MaxFlow
 
         int max_flow = 0; // There is no flow initially
 
-        // Augment the flow while tere is path from source
-        // to sink
-        while (bfs(rGraph, s, t, parent,nodes))
+        // Augment the flow while there is path from source to sink
+        while (bfs(rGraph, source, sink, parent,nodes))
         {
-            // Find minimum residual capacity of the edhes
-            // along the path filled by BFS. Or we can say
+            // Find minimum residual capacity of the nodes along the path filled by BFS. Or we can say
             // find the maximum flow through the path found.
             int path_flow = Integer.MAX_VALUE;
-            for (v=t; v!=s; v=parent[v])
+            for (v=sink; v!=source; v=parent[v])
             {
                 u = parent[v];
                 path_flow = Math.min(path_flow, rGraph[u][v]);
@@ -89,11 +89,12 @@ class MaxFlow
 
             // update residual capacities of the edges and
             // reverse edges along the path
-            for (v=t; v != s; v=parent[v])
+            for (v=sink; v != source; v=parent[v])
             {
                 u = parent[v];
                 rGraph[u][v] -= path_flow;
                 rGraph[v][u] += path_flow;
+                flow.add(u+"-->"+v+" ");
             }
 
             // Add path flow to overall flow
@@ -104,6 +105,7 @@ class MaxFlow
         return max_flow;
     }
     void NewGraph(int nodes,Scanner input,MaxFlow m,int source,int sink){
+        edges=0;
         graph = new int[nodes][nodes];
         Boolean exit=false;
         if(nodes>0){
@@ -117,6 +119,7 @@ class MaxFlow
             System.out.println("Do you want to exit (true/false) : ");
             exit = input.nextBoolean();
             if(exit==true){
+                start=System.currentTimeMillis();
                 break;
             }else{
                 System.out.print("Input node : ");
@@ -125,6 +128,7 @@ class MaxFlow
                 int lNode = input.nextInt();
                 System.out.print("The capacity : ");
                 int capacity = input.nextInt();
+                edges++;
                 if(source==0){
                     graph[node][lNode] = capacity;
                 }else if(source==1) {
@@ -133,18 +137,6 @@ class MaxFlow
                 System.out.println("------------------------------------------");
             }
         }
-        System.out.println("------------- GRAPH VIEW -----------------");
-        if(nodes>0){
-            for (int i = 0; i < nodes; i++) {
-                for (int j = 0; j < nodes; j++) {
-                    System.out.print(graph[i][j]+" ");
-                }
-                System.out.println();
-            }
-        }
-        System.out.println("------------------------------------------");
-        System.out.println("The maximum possible flow is " + m.fordFulkerson(graph, nodes));
-
     }
     void AddLink(int nodes,Scanner input,MaxFlow m){
         Boolean exit=false;
@@ -152,6 +144,7 @@ class MaxFlow
             System.out.println("Do you want to exit (true/false) : ");
             exit = input.nextBoolean();
             if(exit==true){
+                start=System.currentTimeMillis();
                 break;
             }else{
                 System.out.print("Input node : ");
@@ -160,6 +153,7 @@ class MaxFlow
                 int lNode = input.nextInt();
                 System.out.print("The capacity : ");
                 int capacity = input.nextInt();
+                edges++;
                 if(source==0){
                     graph[node][lNode] = capacity;
                 }else if(source==1) {
@@ -168,17 +162,6 @@ class MaxFlow
                 System.out.println("------------------------------------------");
             }
         }
-        System.out.println("------------- GRAPH VIEW -----------------");
-        if(nodes>0){
-           for (int i = 0; i < nodes; i++) {
-               for (int j = 0; j < nodes; j++) {
-                    System.out.print(graph[i][j]+" ");
-               }
-           System.out.println();
-           }
-        }
-        System.out.println("------------------------------------------");
-        System.out.println("The maximum possible flow is " + m.fordFulkerson(graph, nodes));
     }
     void DeleteLink(int nodes,Scanner input,MaxFlow m){
         Boolean exit=false;
@@ -186,12 +169,14 @@ class MaxFlow
             System.out.println("Do you want to exit (true/false) : ");
             exit = input.nextBoolean();
             if(exit==true){
+                start=System.currentTimeMillis();
                 break;
             }else{
                 System.out.print("Input node : ");
                 int node = input.nextInt();
                 System.out.print("The linked node : ");
                 int lNode = input.nextInt();
+                edges--;
                 if(source==0){
                     graph[node][lNode] = 0;
                 }else if(source==1) {
@@ -200,26 +185,141 @@ class MaxFlow
                 System.out.println("------------------------------------------");
             }
         }
+    }
+    void LoadingOtherGraphs(MaxFlow m,Scanner input){
+        int count=0;
+        String number="";
+        String filename="";
+        int count2=0;
+        int col=0;
+        edges=0;
+        int choice=0;
+        System.out.println("1. 6 nodes and 11 edges\n2. 12 nodes and 22 edges\n3. 24 nodes and 44 edges\n4. 48 nodes and 88 edges");
+        choice=input.nextInt();
+        switch (choice){
+            case 1:
+                filename="Network_1.txt";
+                break;
+            case 2:
+                filename="Network_2.txt";
+                break;
+            case 3:
+                filename="Network_3.txt";
+                break;
+            case 4:
+                filename="Network_4.txt";
+                break;
+            default:
+                System.out.println("Invalid Input");
+                break;
+        }
+        start=System.currentTimeMillis();
+        try {
+            File myObj = new File(filename);
+            Scanner myReader = new Scanner(myObj);
+            while (myReader.hasNextLine()) {
+                String data = myReader.nextLine();
+                if(count==0){
+                    snodes= Integer.parseInt(data);
+                }else if(count==1){
+                    source=Integer.parseInt(data);
+                }else if(count==2){
+                    sink=Integer.parseInt(data);
+                }else {
+                    break;
+                }
+                count++;
+            }
+            graph = new int[snodes][snodes];
+            if(snodes>0){
+                for (int i = 0; i < snodes; i++) {
+                    for (int j = 0; j < snodes; j++) {
+                        graph[i][j]=0;
+                    }
+                }
+            }
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+        try {
+            File myObj2 = new File(filename);
+            Scanner myReader2 = new Scanner(myObj2);
+            count=0;
+            while (myReader2.hasNextLine()) {
+                String data2 = myReader2.nextLine();
+                if(count>2){
+                    number="";
+                    while(data2.length()!=count2) {
+                        if (data2.substring(count2, count2+1).equals(",")) {
+                            graph[(count-3)][col]=Integer.parseInt(number);
+                            if(Integer.parseInt(number)>0){
+                                edges++;
+                            }
+                            col++;
+                            number="";
+                        }else{
+                            number=number+data2.substring(count2,count2+1);
+                        }
+                        count2++;
+
+                    }
+                }
+                col=0;
+                count2=0;
+                count++;
+            }
+            myReader2.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+    void Display(MaxFlow m){
+        int count=0;
         System.out.println("------------- GRAPH VIEW -----------------");
-        if(nodes>0){
-            for (int i = 0; i < nodes; i++) {
-                for (int j = 0; j < nodes; j++) {
+        if(snodes>0){
+            for (int i = 0; i < snodes; i++) {
+                for (int j = 0; j < snodes; j++) {
                     System.out.print(graph[i][j]+" ");
                 }
                 System.out.println();
             }
         }
         System.out.println("------------------------------------------");
-        System.out.println("The maximum possible flow is " + m.fordFulkerson(graph, nodes));
+        System.out.println("Number of Edges : "+edges);
+        System.out.println("Number of Nodes : "+snodes);
+        System.out.println("The maximum possible flow is " + m.fordFulkerson(graph, snodes));
+        long end=System.currentTimeMillis();
+        System.out.println("Time taken = "+(end-start)+"ms");
+        count=flow.size();
+        System.out.println("------------- AUGMENTED PATH -------------");
+        for(int i=0;i<flow.size();i++){
+            count--;
+            String val=flow.get(count);
+            if(!(val.substring(0,1).equals(String.valueOf(source)))){
+                System.out.print(val);
+            }else if(i==0){
+                System.out.print(val);
+            }else{
+                System.out.println();
+                System.out.print(val);
+            }
+        }
+        System.out.println();
+        System.out.println("------------------------------------------");
     }
-
     // Driver program to test above functions
     public static void main (String[] args) throws java.lang.Exception
     {
         MaxFlow m = new MaxFlow();
+
         Scanner input = new Scanner(System.in);
         int choice=0;
         int nodes=0;
+
         while(choice!=5) {
             System.out.println("1. Input a new Graph\n2. Add a link\n3. Delete a link\n4. Loading other graphs\n5. exit");
             choice = input.nextInt();
@@ -240,14 +340,19 @@ class MaxFlow
                             break;
                         }
                     }
+                    m.Display(m);
                     break;
                 case 2:
                     m.AddLink(snodes, input, m);
+                    m.Display(m);
                     break;
                 case 3:
                     m.DeleteLink(snodes,input,m);
+                    m.Display(m);
                     break;
                 case 4:
+                    m.LoadingOtherGraphs(m,input);
+                    m.Display(m);
                     break;
                 case 5:
                     break;
@@ -256,5 +361,6 @@ class MaxFlow
                     break;
             }
         }
+
     }
 }
